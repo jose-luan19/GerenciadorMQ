@@ -1,0 +1,40 @@
+version: '3.8'
+
+networks:
+  activeMQnet:
+  rabbitMQnet:
+
+services:
+  activemq:
+    image: rmohr/activemq
+    ports:
+      - "8161:8161"  # Porta da interface da web do ActiveMQ
+      - "61616:61616"  # Porta padrão do ActiveMQ
+    environment:
+      - ACTIVEMQ_ADMIN_LOGIN=admin
+      - ACTIVEMQ_ADMIN_PASSWORD=admin
+    networks:
+      - activeMQnet
+
+  activeMQ:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "15672:15672"  # Porta da interface da web do RabbitMQ
+      - "5672:5672"    # Porta padrão do RabbitMQ
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    networks:
+      - rabbitMQnet
+
+#  app:
+#    build: ./
+#    restart: always
+#    ports:
+#      - "8080:8080"
+#      - "5005:5005"
+#    depends_on:
+#      -
+#    networks:
+#      - activeMQnet
+#      - rabbitMQnet
