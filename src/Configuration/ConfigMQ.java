@@ -21,32 +21,29 @@ public class ConfigMQ {
 
     public void configActiveMQ() throws JMSException {
         javax.jms.ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
-        connectionActiveMQ = connectionFactory.createConnection();
+        connectionActiveMQ = connectionFactory.createConnection("admin", "admin");
         connectionActiveMQ.start();
 
-        /*
-         * Criando Session
-         */
         sessionActvieMQ = connectionActiveMQ.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     public void closeActiveMQ() throws JMSException {
-        connectionActiveMQ.close();
         sessionActvieMQ.close();
+        connectionActiveMQ.close();
     }
 
     public void configRabbitMQ() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        factory.setHost("rabbitMQ");
+        factory.setUsername("admin");
+        factory.setPassword("admin");
         connectionRabbitMq = factory.newConnection();
-
-        // Abrir um canal
         channelRabbitMQ = connectionRabbitMq.createChannel();
     }
 
     public void closeRabbitMQ() throws IOException, TimeoutException {
-        connectionRabbitMq.close();
         channelRabbitMQ.close();
+        connectionRabbitMq.close();
     }
     public javax.jms.Connection getConnectionActiveMQ() {
         return connectionActiveMQ;
