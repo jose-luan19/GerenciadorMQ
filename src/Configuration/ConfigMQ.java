@@ -1,14 +1,23 @@
 package Configuration;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.io.IOUtils;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.TimeoutException;
 
 public class ConfigMQ {
@@ -34,7 +43,7 @@ public class ConfigMQ {
 
     public void configRabbitMQ() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("rabbitMQ");
+        factory.setHost("localhost");
         factory.setUsername("admin");
         factory.setPassword("admin");
         connectionRabbitMq = factory.newConnection();
@@ -45,6 +54,38 @@ public class ConfigMQ {
         channelRabbitMQ.close();
         connectionRabbitMq.close();
     }
+
+    public JsonArray requestApiRabbitMQ(String path){
+        JsonArray jsonArray = null;
+        try {
+            String apiUrl = "http://localhost:15672/api/"+ path;
+            String encodedCredentials = Base64.getEncoder().encodeToString("admin:admin".getBytes());
+
+            // Crie uma URL a partir da String da API
+            URL url = new URL(apiUrl);
+
+            // Abra uma conexão HTTP
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            // Defina o método de solicitação (GET, POST, etc.)
+            connection.setRequestMethod("GET");
+
+            connection.setRequestProperty("Authorization", "Basic " + encodedCredentials);
+            // Ler a resposta da API inteira de uma só vez
+            InputStream inputStream = connection.getInputStream();
+            String jsonResponse = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+            inputStream.close();
+            connection.disconnect();
+
+            JsonParser jsonParser = new JsonParser();
+            jsonArray = jsonParser.parse(jsonResponse).getAsJsonArray();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return jsonArray;
+    }
+
     public javax.jms.Connection getConnectionActiveMQ() {
         return connectionActiveMQ;
     }

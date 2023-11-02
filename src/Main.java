@@ -1,8 +1,10 @@
 import Services.Broker;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) throws IOException, TimeoutException {
@@ -11,6 +13,17 @@ public class Main {
         String input;
 
         do {
+            List<String> namesQueues =  broker.getNamesQueues();
+
+            if (!namesQueues.isEmpty()) {
+                System.out.println("**********************************");
+                System.out.println("\tFILAS EXISTENTES");
+                String resultado = namesQueues.stream()
+                        .map(s -> "\t\t" + s.replaceAll("\"", ""))
+                        .collect(Collectors.joining("\n"));
+
+                System.out.println(resultado);
+            }
             System.out.println("----------------------------------");
             System.out.println("\t\t  MENU");
             System.out.println("\t 1 - CRIAR FILA");

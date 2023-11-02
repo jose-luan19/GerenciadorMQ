@@ -3,19 +3,10 @@ package Services;
 import Configuration.ConfigMQ;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.rabbitmq.client.AMQP;
-import org.apache.commons.io.IOUtils;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 
@@ -54,39 +45,15 @@ public class Broker {
     }
 
     public void getQueueSSizeRabbitMQ() throws IOException, TimeoutException {
-        try {
-            String apiUrl = "http://localhost:15672/api/queues";
-            String encodedCredentials = Base64.getEncoder().encodeToString("admin:admin".getBytes());
 
-            // Crie uma URL a partir da String da API
-            URL url = new URL(apiUrl);
+        JsonArray jsonArray = configMQ.requestApiRabbitMQ("queues");
 
-            // Abra uma conexão HTTP
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-            // Defina o método de solicitação (GET, POST, etc.)
-            connection.setRequestMethod("GET");
-
-            connection.setRequestProperty("Authorization", "Basic " + encodedCredentials);
-            // Ler a resposta da API inteira de uma só vez
-            InputStream inputStream = connection.getInputStream();
-            String jsonResponse = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            inputStream.close();
-            connection.disconnect();
-            // Use o Gson para analisar o JSON em uma lista de objetos
-            JsonParser jsonParser = new JsonParser();
-            JsonArray jsonArray = jsonParser.parse(jsonResponse).getAsJsonArray();
-
-            // Extrai a quantidade de mensagens de cada fila
-            int quantidade = 0;
-            for (JsonElement jsonElement : jsonArray) {
-                quantidade += jsonElement.getAsJsonObject().get("messages").getAsInt();
-            }
-            System.out.println("Existem "+ quantidade +" mensagens pendentes!");
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        // Extrai a quantidade de mensagens de cada fila
+        int quantidade = 0;
+        for (JsonElement jsonElement : jsonArray) {
+            quantidade += jsonElement.getAsJsonObject().get("messages").getAsInt();
         }
+        System.out.println("Existem "+ quantidade +" mensagens pendentes!");
     }
 
     public void createTopicRabbitMQ(String topicName) throws IOException, TimeoutException {
@@ -108,7 +75,20 @@ public class Broker {
         // Implementar a adição de um cliente a um tópico
     }
 
+    private List<String> requestNamesQueues(){
+        List<String> namesQueues = new ArrayList<>();
 
+        JsonArray jsonArray = configMQ.requestApiRabbitMQ("queues");
+
+        for (JsonElement jsonElement : jsonArray) {
+            namesQueues.add(jsonElement.getAsJsonObject().get("name").toString());
+        }
+        return namesQueues;
+    }
+
+    public List<String> getNamesQueues(){
+        return requestNamesQueues();
+    }
 
     public void addQueueActiveMq(String queueName) throws JMSException {
         configMQ.configActiveMQ();
