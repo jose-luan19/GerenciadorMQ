@@ -44,11 +44,10 @@ public class Broker {
         }
     }
 
-    public void getQueueSSizeRabbitMQ() throws IOException, TimeoutException {
+    public void getQueuesMessagesSizeRabbitMQ() throws IOException, TimeoutException {
 
         JsonArray jsonArray = configMQ.requestApiRabbitMQ("queues");
 
-        // Extrai a quantidade de mensagens de cada fila
         int quantidade = 0;
         for (JsonElement jsonElement : jsonArray) {
             quantidade += jsonElement.getAsJsonObject().get("messages").getAsInt();
@@ -57,15 +56,28 @@ public class Broker {
     }
 
     public void createTopicRabbitMQ(String topicName) throws IOException, TimeoutException {
-        configMQ.configRabbitMQ();
-        configMQ.closeRabbitMQ();
-        // Implementar a criação de um tópico
+        try{
+            configMQ.configRabbitMQ();
+            configMQ.getChannelRabbitMQ().exchangeDeclarePassive(topicName);
+            System.out.println("TOPIC JÁ EXISTE!");
+        }catch (Exception e){
+            configMQ.configRabbitMQ();
+            configMQ.getChannelRabbitMQ().exchangeDeclare(topicName, "topic");
+            configMQ.closeRabbitMQ();
+        }
     }
 
     public void removeTopicRabbitMQ(String topicName) throws IOException, TimeoutException {
-        configMQ.configRabbitMQ();
-        configMQ.closeRabbitMQ();
-        // Implementar a remoção de um tópico
+
+        try{
+            configMQ.configRabbitMQ();
+            configMQ.getChannelRabbitMQ().exchangeDeclarePassive(topicName);
+            configMQ.getChannelRabbitMQ().exchangeDelete(topicName);
+            configMQ.closeRabbitMQ();
+        }catch (Exception e){
+            System.out.println("TOPIC NÃO EXISTE!");
+        }
+
     }
 
 
@@ -73,6 +85,19 @@ public class Broker {
         configMQ.configRabbitMQ();
         configMQ.closeRabbitMQ();
         // Implementar a adição de um cliente a um tópico
+    }
+
+    private List<String> requestNamesTopics(){
+        List<String> namesTopics = new ArrayList<>();
+
+        JsonArray jsonArray = configMQ.requestApiRabbitMQ("exchanges");
+
+        for (JsonElement jsonElement : jsonArray) {
+            if (jsonElement.getAsJsonObject().get("type").toString().equals("\"topic\"")){
+                namesTopics.add(jsonElement.getAsJsonObject().get("name").toString());
+            }
+        }
+        return namesTopics;
     }
 
     private List<String> requestNamesQueues(){
@@ -88,6 +113,9 @@ public class Broker {
 
     public List<String> getNamesQueues(){
         return requestNamesQueues();
+    }
+    public List<String> getNamesTopics(){
+        return requestNamesTopics();
     }
 
     public void addQueueActiveMq(String queueName) throws JMSException {

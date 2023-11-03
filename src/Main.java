@@ -13,23 +13,18 @@ public class Main {
         String input;
 
         do {
-            List<String> namesQueues =  broker.getNamesQueues();
 
-            if (!namesQueues.isEmpty()) {
-                System.out.println("**********************************");
-                System.out.println("\tFILAS EXISTENTES");
-                String resultado = namesQueues.stream()
-                        .map(s -> "\t\t" + s.replaceAll("\"", ""))
-                        .collect(Collectors.joining("\n"));
+            printNames(broker.getNamesTopics(), "TOPICS");
 
-                System.out.println(resultado);
-            }
+            printNames(broker.getNamesQueues(), "FILAS");
+
             System.out.println("----------------------------------");
             System.out.println("\t\t  MENU");
             System.out.println("\t 1 - CRIAR FILA");
             System.out.println("\t 2 - REMOVER FILA");
-            System.out.println("\t 3 - Nº DE MENSAGENS NAS FILAS ");
-            System.out.println("\t 4 - XXXXXXXXX ");
+            System.out.println("\t 3 - CRIAR TOPIC");
+            System.out.println("\t 4 - REMOVER TOPIC");
+            System.out.println("\t 5 - Nº DE MENSAGENS NAS FILAS ");
             System.out.println("\t 0 - SAIR ");
             System.out.print("\t ESCOLHA OPÇÃO: ");
 
@@ -43,16 +38,26 @@ public class Main {
                         return;
                     case 1:
                         System.out.println("NOME DA FILA:");
-                        String queueName = scanner.next();
-                        broker.addQueueRabbitMQ(queueName);
+                        input = scanner.next();
+                        broker.addQueueRabbitMQ(input);
                         break;
                     case 2:
                         System.out.println("NOME DA FILA:");
-                        queueName = scanner.next();
-                        broker.removeQueueRabbitMQ(queueName);
+                        input = scanner.next();
+                        broker.removeQueueRabbitMQ(input);
                         break;
                     case 3:
-                        broker.getQueueSSizeRabbitMQ();
+                        System.out.println("NOME DO TOPIC:");
+                        input = scanner.next();
+                        broker.createTopicRabbitMQ(input);
+                        break;
+                    case 4:
+                        System.out.println("NOME DA TOPIC:");
+                        input = scanner.next();
+                        broker.removeTopicRabbitMQ(input);
+                        break;
+                    case 5:
+                        broker.getQueuesMessagesSizeRabbitMQ();
                         break;
                     default:
                         System.out.println("Opção inválida");
@@ -62,5 +67,17 @@ public class Main {
                 System.out.println("Entrada inválida. Digite um número válido.");
             }
         } while (!input.equals("0"));
+    }
+
+    public static void printNames(List<String> listNames, String typeNames) {
+        if (!listNames.isEmpty()) {
+            System.out.println("**********************************");
+            System.out.println("\t"+ typeNames +" EXISTENTES");
+            String resultado = listNames.stream()
+                    .map(s -> "\t\t" + s.replaceAll("\"", ""))
+                    .collect(Collectors.joining("\n"));
+
+            System.out.println(resultado);
+        }
     }
 }
