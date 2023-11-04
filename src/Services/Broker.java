@@ -4,19 +4,16 @@ import Configuration.ConfigMQ;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 public class Broker {
-    private static  Map<String, Client> clients;
     private final ConfigMQ configMQ;
 
     public Broker() {
         configMQ = new ConfigMQ();
-        clients = new HashMap<>();
     }
 
     public void addQueueRabbitMQ(String queueName) throws IOException, TimeoutException {
@@ -42,7 +39,7 @@ public class Broker {
         }
     }
 
-    public void getQueuesMessagesSizeRabbitMQ() throws IOException, TimeoutException {
+    public void getQueuesMessagesSizeRabbitMQ() {
 
         JsonArray jsonArray = configMQ.requestApiRabbitMQ("queues");
 
@@ -65,7 +62,7 @@ public class Broker {
         }
     }
 
-    public void removeTopicRabbitMQ(String topicName) throws IOException, TimeoutException {
+    public void removeTopicRabbitMQ(String topicName) {
 
         try{
             configMQ.configRabbitMQ();
@@ -79,7 +76,7 @@ public class Broker {
     }
 
 
-    public void addClientToTopicRabbitMQ(String clientName, String topicName, String queueName, String key) throws IOException, TimeoutException {
+    public void addClientToTopicRabbitMQ( String topicName, String queueName, String key) throws IOException, TimeoutException {
         configMQ.configRabbitMQ();
         try{
             configMQ.getChannelRabbitMQ().exchangeDeclarePassive(topicName);
@@ -90,10 +87,6 @@ public class Broker {
         configMQ.getChannelRabbitMQ().queueDeclare(queueName, false, false, false, null);
 
         configMQ.getChannelRabbitMQ().queueBind(queueName, topicName, key);
-        Client newClient = new Client(this);
-        clients.put(clientName,newClient);
-        newClient.subscribeToTopic(queueName);
-//        configMQ.closeRabbitMQ();
     }
 
     private List<String> requestNamesTopics(){
