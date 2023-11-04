@@ -1,19 +1,25 @@
 package Services;
 
+import com.rabbitmq.client.DeliverCallback;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
 public class Client {
-    private String name;
     private Broker broker;
 
-    public Client(String name, Broker broker) {
-        this.name = name;
+    public Client(Broker broker) {
         this.broker = broker;
     }
 
-    public void subscribeToTopic(String topicName) throws IOException, TimeoutException {
-        broker.addClientToTopicRabbitMQ(this, topicName);
+    public void subscribeToTopic(String queueName) throws IOException, TimeoutException {
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            System.out.println("\n**** Mensagem recebida: " + message +" ****");
+        };
+        broker.getConfigMQ().getChannelRabbitMQ().basicConsume(queueName, true, deliverCallback, consumerTag -> {
+        });
     }
 
     public void sendMessageToUser(String recipient, String message) {

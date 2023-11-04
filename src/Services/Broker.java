@@ -11,14 +11,12 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 public class Broker {
-    private Map<String, Queue<String>> queues;
-    private Map<String, List<Client>> topics;
-    private ConfigMQ configMQ;
+    private static  Map<String, Client> clients;
+    private final ConfigMQ configMQ;
 
     public Broker() {
         configMQ = new ConfigMQ();
-        queues = new HashMap<>();
-        topics = new HashMap<>();
+        clients = new HashMap<>();
     }
 
     public void addQueueRabbitMQ(String queueName) throws IOException, TimeoutException {
@@ -81,10 +79,21 @@ public class Broker {
     }
 
 
-    public void addClientToTopicRabbitMQ(Client client, String topicName) throws IOException, TimeoutException {
+    public void addClientToTopicRabbitMQ(String clientName, String topicName, String queueName, String key) throws IOException, TimeoutException {
         configMQ.configRabbitMQ();
-        configMQ.closeRabbitMQ();
-        // Implementar a adição de um cliente a um tópico
+        try{
+            configMQ.getChannelRabbitMQ().exchangeDeclarePassive(topicName);
+        }catch (Exception e){
+            System.out.println("TOPIC NÃO EXISTE!");
+            return;
+        }
+        configMQ.getChannelRabbitMQ().queueDeclare(queueName, false, false, false, null);
+
+        configMQ.getChannelRabbitMQ().queueBind(queueName, topicName, key);
+        Client newClient = new Client(this);
+        clients.put(clientName,newClient);
+        newClient.subscribeToTopic(queueName);
+//        configMQ.closeRabbitMQ();
     }
 
     private List<String> requestNamesTopics(){
@@ -118,63 +127,7 @@ public class Broker {
         return requestNamesTopics();
     }
 
-    public void addQueueActiveMq(String queueName) throws JMSException {
-        configMQ.configActiveMQ();
-        Destination destination = configMQ.getSessionActvieMQ().createQueue(queueName);
-        configMQ.getSessionActvieMQ().createConsumer(destination);
-        configMQ.closeActiveMQ();
-    }
-
-    public void removeQueueActiveMQ(String queueName) throws JMSException {
-//        // Implementar a remoção de uma fila
-//        try {
-//            String jmxURL = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi"; // Ajuste conforme sua configuração
-//            JMXServiceURL url = new JMXServiceURL(jmxURL);
-//            JMXConnector connector = JMXConnectorFactory.connect(url, null);
-//            connector.connect();
-//            MBeanServerConnection connection = connector.getMBeanServerConnection();
-//
-//            ObjectName brokerName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost");
-//            ObjectName[] queueMBeans = (ObjectName[]) connection.getAttribute(brokerName, "Queues");
-//
-//            for (ObjectName queueMBean : queueMBeans) {
-//                String name = queueMBean.getKeyProperty("destinationName");
-//                if (name.equals(queueName)) {
-//                    // Parar a fila
-//                    connection.invoke(queueMBean, "stop", new Object[0], new String[0]);
-//
-//                    // Remover todas as mensagens
-//                    connection.invoke(queueMBean, "purge", new Object[0], new String[0]);
-//
-//                    // Remover a fila
-//                    connection.invoke(brokerName, "removeQueue", new Object[]{queueMBean}, new String[]{"javax.management.ObjectName"});
-//                }
-//            }
-//
-//            connector.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-    }
-    public int getQueueSizeActiveMQ(String queueName) throws JMSException {
-        // Implementar para listar a quantidade de mensagens em uma fila
-        configMQ.configActiveMQ();
-        configMQ.closeActiveMQ();
-        return 0;
-    }
-    public void createTopicActiveMQ(String topicName) throws JMSException {
-        // Implementar a criação de um tópico
-        configMQ.configActiveMQ();
-        configMQ.closeActiveMQ();
-    }
-    public void removeTopicActiveMQ(String topicName) throws JMSException {
-        // Implementar a remoção de um tópico
-        configMQ.configActiveMQ();
-        configMQ.closeActiveMQ();
-    }
-    public void addClientToTopicActiveMQ(Client client, String topicName) throws JMSException {
-        // Implementar a adição de um cliente a um tópico
-        configMQ.configActiveMQ();
-        configMQ.closeActiveMQ();
+    public ConfigMQ getConfigMQ() {
+        return configMQ;
     }
 }

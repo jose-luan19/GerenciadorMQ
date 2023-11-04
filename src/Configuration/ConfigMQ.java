@@ -15,6 +15,8 @@ import javax.jms.Session;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -62,7 +64,8 @@ public class ConfigMQ {
             String encodedCredentials = Base64.getEncoder().encodeToString("admin:admin".getBytes());
 
             // Crie uma URL a partir da String da API
-            URL url = new URL(apiUrl);
+            URI uri = new URI(apiUrl);
+            URL url = uri.toURL();
 
             // Abra uma conexão HTTP
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -77,11 +80,12 @@ public class ConfigMQ {
             inputStream.close();
             connection.disconnect();
 
-            JsonParser jsonParser = new JsonParser();
-            jsonArray = jsonParser.parse(jsonResponse).getAsJsonArray();
+            jsonArray = JsonParser.parseString(jsonResponse).getAsJsonArray();
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
         return jsonArray;
     }
