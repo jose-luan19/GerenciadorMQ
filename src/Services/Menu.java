@@ -5,7 +5,6 @@ import com.github.javafaker.Faker;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
-import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
 
 public class Menu {
@@ -127,9 +126,8 @@ public class Menu {
             System.out.println("\n\n\n\t\t  MENU CLIENTE");
             System.out.println("===================================");
             System.out.println("\t 1 - ASSINAR TOPIC");
-//            System.out.println("\t 2 - REMOVER FILA");
-//            System.out.println("\t 3 - CRIAR TOPIC");
-//            System.out.println("\t 4 - REMOVER TOPIC");
+            System.out.println("\t 2 - ENVIAR MENSAGEM DIRETA");
+            System.out.println("\t 3 - ENVIAR MENSAGEM PARA TOPIC");
             System.out.println("\t 0 - VOLTAR AO MENU GERAL ");
             System.out.print("\t ESCOLHA OPÇÃO: ");
             input = scanner.next();
@@ -151,14 +149,18 @@ public class Menu {
                         client.subscribeToTopic(queue);
                         break;
                     case 2:
-                        System.out.println("NOME DA FILA:");
-                        input = scanner.next();
-                        broker.removeQueueRabbitMQ(input);
+                        System.out.println("MENSAGEM: ");
+                        String messageDirect = scanner.next();
+                        client.sendMessageToUser(messageDirect);
                         break;
                     case 3:
-                        System.out.println("NOME DO TOPIC:");
-                        input = scanner.next();
-                        broker.createTopicRabbitMQ(input);
+                        System.out.println("NOME DO TOPIC: ");
+                        String topicName = scanner.next();
+                        System.out.println("ROUTING KEY: ");
+                        String keyMessage = scanner.next();
+                        System.out.println("MENSAGEM: ");
+                        String messageTopic = scanner.next();
+                        client.sendMessageToTopic(topicName, keyMessage, messageTopic);
                         break;
                     default:
                         System.out.println("Opção inválida");
