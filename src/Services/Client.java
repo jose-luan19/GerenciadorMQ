@@ -17,8 +17,8 @@ public class Client {
     public void subscribeToTopic(String queueName) throws IOException {
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            System.out.println("\n**** Mensagem recebida: " + message +" ****");
-            System.out.println("**** Cliente: " + name +" ****");
+            System.out.println("\n**** Mensagem recebida: \"" + message +"\" ****");
+            System.out.println("**** Cliente: \"" + name +"\" ****");
         };
         broker.getConfigMQ().getChannelRabbitMQ().basicConsume(queueName, true, deliverCallback, consumerTag -> {
         });

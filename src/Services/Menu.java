@@ -3,9 +3,7 @@ package Services;
 import com.github.javafaker.Faker;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
@@ -16,11 +14,14 @@ public class Menu {
     private static String input;
     private static final Faker faker = new Faker();
     private static final Scanner scanner = new Scanner(System.in);
+    private static final Map<String, Client> listClient = new HashMap<>();
 
     private static void names(){
         printNames(broker.getNamesTopics(), "TOPICS");
 
         printNames(broker.getNamesQueues(), "FILAS");
+
+        printNames(new ArrayList<>(listClient.keySet()), "CLIENTES");
     }
     public static void menuServidor() throws IOException, TimeoutException {
 
@@ -28,14 +29,15 @@ public class Menu {
 
             names();
 
-            System.out.println("\t\t  MENU GERAL");
+            System.out.println("\n\t\t  MENU GERAL");
             System.out.println("...................................................");
             System.out.println("\t 1 - CRIAR FILA");
             System.out.println("\t 2 - REMOVER FILA");
             System.out.println("\t 3 - CRIAR TOPIC");
             System.out.println("\t 4 - REMOVER TOPIC");
             System.out.println("\t 5 - Nº DE MENSAGENS NAS FILAS");
-            System.out.println("\t 6 - MENU CLIENTE");
+            System.out.println("\t 6 - CRIAR CLIENTE");
+            System.out.println("\t 7 - ACESSAR CLIENTE");
             System.out.println("\t 0 - SAIR ");
             System.out.print("\t ESCOLHA OPÇÃO: ");
 
@@ -71,7 +73,12 @@ public class Menu {
                         broker.getQueuesMessagesSizeRabbitMQ();
                         break;
                     case 6:
-                        menuCliente();
+                        menuCliente(createClient());
+                        break;
+                    case 7:
+                        System.out.println("NOME DA CLIENTE:");
+                        input = scanner.next();
+                        menuCliente(getClient(input));
                         break;
                     default:
                         System.out.println("Opção inválida");
@@ -83,6 +90,25 @@ public class Menu {
         } while (!input.equals("0"));
     }
 
+    public static Client createClient(){
+        String clientName = faker.name().firstName();
+        Client newClient = new Client(broker,clientName);
+        listClient.put(clientName,newClient);
+        System.out.println("\nCLIENTE \""+clientName+"\" CRIADO");
+        return newClient;
+    }
+    public static Client getClient(String clientName){
+        Client cliente = listClient.get(clientName);
+        if (cliente == null) {
+            cliente = new Client(broker, clientName);
+            System.out.println("CLIENTE \""+clientName+"\" NÃO EXISTIA, MAS FOI CRIADO");
+            listClient.put(clientName, cliente);
+        }else {
+            System.out.println("CLIENTE \""+clientName+"\"");
+        }
+        return cliente;
+    }
+
     private static void printNames(List<String> listNames, String typeNames) {
         if (!listNames.isEmpty()) {
             System.out.println("**********************************");
@@ -92,24 +118,20 @@ public class Menu {
                     .collect(Collectors.joining("\n"));
 
             System.out.println(resultado);
+            System.out.println("---------------------------------------");
         }
-        System.out.println("**********************************");
     }
-    private static void menuCliente()throws IOException, TimeoutException {
-        String clientName = faker.name().firstName();
-        Client newCliente = new Client(broker,clientName);
-        System.out.println("CLIENTE \""+clientName+"\" criado");
+    private static void menuCliente(Client client)throws IOException, TimeoutException {
 
         do {
             System.out.println("\n\n\n\t\t  MENU CLIENTE");
-            System.out.println("----------------------------------");
+            System.out.println("===================================");
             System.out.println("\t 1 - ASSINAR TOPIC");
 //            System.out.println("\t 2 - REMOVER FILA");
 //            System.out.println("\t 3 - CRIAR TOPIC");
 //            System.out.println("\t 4 - REMOVER TOPIC");
             System.out.println("\t 0 - VOLTAR AO MENU GERAL ");
             System.out.print("\t ESCOLHA OPÇÃO: ");
-
             input = scanner.next();
 
             try {
@@ -126,7 +148,7 @@ public class Menu {
                         System.out.println("ROUTING KEY: ");
                         String key = scanner.next();
                         broker.addClientToTopicRabbitMQ(topic,queue,key);
-                        newCliente.subscribeToTopic(queue);
+                        client.subscribeToTopic(queue);
                         break;
                     case 2:
                         System.out.println("NOME DA FILA:");
